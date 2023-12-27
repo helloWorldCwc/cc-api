@@ -90,7 +90,7 @@ cos:
     secretKey: xxx
     region: xxx
     bucket: xxx
-    
+
 # api开发密钥配置
 cc:
   client:

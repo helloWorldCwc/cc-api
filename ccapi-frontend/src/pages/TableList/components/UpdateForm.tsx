@@ -19,8 +19,9 @@ const CreateFormModel: React.FC<Props> = (props) => {
     useEffect(() => {
        updateForm.current?.setFieldsValue?.(props.values);
     })
+    
     return (<>
-        <ModalForm
+      <ModalForm
         title={"编辑接口信息"}
         width="500px"
         submitter={false}

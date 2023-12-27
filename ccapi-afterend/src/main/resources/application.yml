@@ -95,5 +95,5 @@ cos:
 cc:
   client:
     appId: xxxx
-    accessKey: usercc
+    accessKey: usercc5
     secretKey: cc123

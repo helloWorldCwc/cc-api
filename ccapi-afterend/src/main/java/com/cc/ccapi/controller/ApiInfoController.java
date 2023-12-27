@@ -12,6 +12,7 @@ import com.cc.ccapi.model.dto.apiInfo.ApiInfoQueryRequest;
 import com.cc.ccapi.model.dto.apiInfo.ApiInfoUpdateRequest;
 import com.cc.ccapi.model.entity.ApiInfo;
 import com.cc.ccapi.model.entity.User;
+import com.cc.ccapi.model.enums.ApiStatusEnum;
 import com.cc.ccapi.model.vo.ApiInfoVO;
 import com.cc.ccapi.service.ApiInfoService;
 import com.cc.ccapi.service.UserService;
@@ -234,7 +235,7 @@ public class ApiInfoController {
      * @return
      */
     @PostMapping("/offline")
-    public BaseResponse<Boolean> apiOnline(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> apiOffline(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         long id = idRequest.getId();
         if(id < 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数有误");
@@ -249,9 +250,8 @@ public class ApiInfoController {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 设置为上线
-        oldApiInfo.setStatus(0);
+        oldApiInfo.setStatus(ApiStatusEnum.OFFLINE.getValue());
         boolean result = apiInfoService.updateById(oldApiInfo);
-        return ResultUtils.success(result);
         return ResultUtils.success(result);
     }
 
@@ -263,7 +263,7 @@ public class ApiInfoController {
      * @return
      */
     @PostMapping("/online")
-    public BaseResponse<Boolean> apiOffline(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> apiOnline(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         long id = idRequest.getId();
         if(id < 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数有误");
@@ -276,6 +276,7 @@ public class ApiInfoController {
         // 判断接口是否可以调通
         try {
             String msg = ccApiClient.apiPost();
+            // 这儿肯定需要判断是否接口可以通过
             System.out.println(msg);
         }catch (Exception e) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
@@ -285,7 +286,7 @@ public class ApiInfoController {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 设置为上线
-        oldApiInfo.setStatus(1);
+        oldApiInfo.setStatus(ApiStatusEnum.ONLINE.getValue());
         boolean result = apiInfoService.updateById(oldApiInfo);
         return ResultUtils.success(result);
     }

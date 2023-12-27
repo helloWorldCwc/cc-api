@@ -19,6 +19,12 @@
         <java.version>1.8</java.version>
     </properties>
     <dependencies>
+        <!-- api的sdk -->
+        <dependency>
+            <groupId>com.cc</groupId>
+            <artifactId>cc-api-stater</artifactId>
+            <version>0.0.1</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>

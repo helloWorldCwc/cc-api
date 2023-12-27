@@ -2,10 +2,7 @@ package com.cc.ccapi.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cc.ccapi.annotation.AuthCheck;
-import com.cc.ccapi.common.BaseResponse;
-import com.cc.ccapi.common.DeleteRequest;
-import com.cc.ccapi.common.ErrorCode;
-import com.cc.ccapi.common.ResultUtils;
+import com.cc.ccapi.common.*;
 import com.cc.ccapi.constant.UserConstant;
 import com.cc.ccapi.exception.BusinessException;
 import com.cc.ccapi.exception.ThrowUtils;
@@ -18,6 +15,7 @@ import com.cc.ccapi.model.entity.User;
 import com.cc.ccapi.model.vo.ApiInfoVO;
 import com.cc.ccapi.service.ApiInfoService;
 import com.cc.ccapi.service.UserService;
+import com.cc.ccapistater.client.CcApiClient;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -40,6 +38,9 @@ public class ApiInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private CcApiClient ccApiClient;
 
     private final static Gson GSON = new Gson();
 
@@ -226,4 +227,66 @@ public class ApiInfoController {
         return ResultUtils.success(result);
     }
 
+    /**
+     *  接口上线
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/offline")
+    public BaseResponse<Boolean> apiOnline(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+        long id = idRequest.getId();
+        if(id < 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数有误");
+        }
+        // 参数校验
+        User loginUser = userService.getLoginUser(request);
+        // 判断是否存在
+        ApiInfo oldApiInfo = apiInfoService.getById(id);
+        ThrowUtils.throwIf(oldApiInfo == null, ErrorCode.NOT_FOUND_ERROR);
+        // 仅本人或管理员可编辑
+        if (!oldApiInfo.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        // 设置为上线
+        oldApiInfo.setStatus(0);
+        boolean result = apiInfoService.updateById(oldApiInfo);
+        return ResultUtils.success(result);
+        return ResultUtils.success(result);
+    }
+
+
+    /**
+     *  接口下线
+     * @param idRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/online")
+    public BaseResponse<Boolean> apiOffline(@RequestBody IdRequest idRequest, HttpServletRequest request) {
+        long id = idRequest.getId();
+        if(id < 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数有误");
+        }
+        // 参数校验
+        User loginUser = userService.getLoginUser(request);
+        // 判断是否存在
+        ApiInfo oldApiInfo = apiInfoService.getById(id);
+        ThrowUtils.throwIf(oldApiInfo == null, ErrorCode.NOT_FOUND_ERROR);
+        // 判断接口是否可以调通
+        try {
+            String msg = ccApiClient.apiPost();
+            System.out.println(msg);
+        }catch (Exception e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, e.getMessage());
+        }
+        // 仅本人或管理员可编辑
+        if (!oldApiInfo.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        // 设置为上线
+        oldApiInfo.setStatus(1);
+        boolean result = apiInfoService.updateById(oldApiInfo);
+        return ResultUtils.success(result);
+    }
 }
